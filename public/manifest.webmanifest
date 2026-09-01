@@ -1,0 +1,24 @@
+{
+  "name": "Eletromidia Postagem - Controle de Protocolos",
+  "short_name": "Eletromidia Postagem",
+  "description": "Sistema de checklist diário e dashboard de recebimento de notas e cartazes da Eletromidia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#FF4F00",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/assets/eletromidia-app logo-512px.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/eletromidia-app logo-1024px.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
