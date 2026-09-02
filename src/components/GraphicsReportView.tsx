@@ -104,22 +104,22 @@ export const GraphicsReportView: React.FC<GraphicsReportViewProps> = ({ records 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
+          <h1 className="text-base sm:text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
             <Building2 className="w-5 h-5 text-[#4E18FF]" />
             Relatórios por Gráfica & Cliente
           </h1>
-          <p className="text-xs text-zinc-500">
+          <p className="text-[11px] sm:text-xs text-zinc-500">
             Análise consolidada de fornecimento e distribuição de postagem em abrigos
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="bg-zinc-50 border border-zinc-300 rounded-xl px-3 py-2 text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#FF4F00]"
+            className="w-full sm:w-auto bg-zinc-50 border border-zinc-300 rounded-xl px-3 py-2 text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#FF4F00]"
           >
             <option value="all">Ano: Histórico Completo</option>
             {availableYears.map((y) => (
@@ -130,13 +130,13 @@ export const GraphicsReportView: React.FC<GraphicsReportViewProps> = ({ records 
       </div>
 
       {/* Supplier Section */}
-      <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
           <div>
-            <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#FF4F00]" /> Ranking de Gráficas Fornecedoras
             </h2>
-            <p className="text-xs text-zinc-500">Volume total de cartazes e protocolos entregues no galpão</p>
+            <p className="text-[11px] sm:text-xs text-zinc-500">Volume total de cartazes e protocolos entregues no galpão</p>
           </div>
           <span className="text-xs font-bold text-zinc-700 bg-zinc-100 px-3 py-1 rounded-full">
             {supplierStats.length} gráficas
@@ -184,13 +184,13 @@ export const GraphicsReportView: React.FC<GraphicsReportViewProps> = ({ records 
       </div>
 
       {/* Client Section */}
-      <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
           <div>
-            <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <Users className="w-4 h-4 text-[#4E18FF]" /> Ranking de Clientes & Anunciantes
             </h2>
-            <p className="text-xs text-zinc-500">Volume total de material veiculado em abrigos</p>
+            <p className="text-[11px] sm:text-xs text-zinc-500">Volume total de material veiculado em abrigos</p>
           </div>
           <span className="text-xs font-bold text-zinc-700 bg-zinc-100 px-3 py-1 rounded-full">
             {clientStats.length} clientes

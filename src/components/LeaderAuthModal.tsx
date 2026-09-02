@@ -95,34 +95,34 @@ export const LeaderAuthModal: React.FC<LeaderAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#121214] text-white border border-zinc-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      <div className="bg-[#121214] text-white border border-zinc-800 rounded-2xl sm:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl my-auto">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-zinc-900 to-black p-5 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FF4F00] flex items-center justify-center shadow-lg">
-              <Lock className="w-5 h-5 text-black" />
+        <div className="bg-gradient-to-r from-zinc-900 to-black p-4 sm:p-5 border-b border-zinc-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl sm:rounded-2xl bg-[#FF4F00] flex items-center justify-center shadow-lg shrink-0">
+              <Lock className="w-4 sm:w-5 h-4 sm:h-5 text-black" />
             </div>
             <div>
-              <h2 className="text-base font-black tracking-tight text-white flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
                 Acesso Restrito ao Líder
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-[11px] sm:text-xs text-zinc-400">
                 {isChangingPin ? 'Alteração de Código de Segurança' : 'Digite o PIN de autorização de gestão'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {changeSuccess && (
             <div className="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 p-3.5 rounded-2xl text-xs font-bold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />

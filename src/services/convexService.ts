@@ -144,14 +144,32 @@ class ConvexService {
     }
   }
 
-  public async clearAllRecords(): Promise<number> {
+  public async clearAllRecords(onProgress?: (deleted: number) => void): Promise<number> {
     if (!this.client) return 0;
-    return await this.client.mutation(api.records.clearAllRecords, {});
+    try {
+      let totalDeleted = 0;
+      while (true) {
+        const res: any = await this.client.mutation(api.records.clearBatch, { limit: 500 });
+        if (!res || res.deleted === 0) break;
+        totalDeleted += res.deleted;
+        if (onProgress) onProgress(totalDeleted);
+        if (!res.hasMore) break;
+      }
+      return totalDeleted;
+    } catch (e) {
+      console.warn("Erro ao limpar registros no Convex:", e);
+      return 0;
+    }
   }
 
   public async deduplicateRecords(): Promise<{ deletedCount: number; remainingCount: number }> {
     if (!this.client) return { deletedCount: 0, remainingCount: 0 };
-    return await this.client.mutation(api.records.deduplicateConvexRecords, {});
+    try {
+      return await this.client.mutation(api.records.deduplicateConvexRecords, { limit: 1000 });
+    } catch (e) {
+      console.warn("Erro ao deduplicar Convex:", e);
+      return { deletedCount: 0, remainingCount: 0 };
+    }
   }
 
   public async batchSyncRecords(

@@ -178,14 +178,39 @@ export const batchInsert = mutation({
   }
 });
 
-export const deduplicateConvexRecords = mutation({
+export const clearBatch = mutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const batchLimit = args.limit || 500;
+    const records = await ctx.db.query("records").take(batchLimit);
+    for (const rec of records) {
+      await ctx.db.delete(rec._id);
+    }
+    return { deleted: records.length, hasMore: records.length === batchLimit };
+  }
+});
+
+export const clearAllRecords = mutation({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("records").collect();
+    const batchLimit = 500;
+    const records = await ctx.db.query("records").take(batchLimit);
+    for (const rec of records) {
+      await ctx.db.delete(rec._id);
+    }
+    return { deleted: records.length, hasMore: records.length === batchLimit };
+  }
+});
+
+export const deduplicateConvexRecords = mutation({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const batchLimit = args.limit || 1000;
+    const records = await ctx.db.query("records").take(batchLimit);
     const seenMap = new Map<string, any>();
     let deletedCount = 0;
 
-    for (const rec of all) {
+    for (const rec of records) {
       const sig = `${rec.ano}|${(rec.protocolo_os_nf || '').toLowerCase()}|${(rec.cliente || '').toLowerCase()}|${(rec.campanha || '').toLowerCase()}|${rec.layout}|${rec.quantidade}|${rec.data || ''}`;
       if (seenMap.has(sig)) {
         await ctx.db.delete(rec._id);
@@ -195,17 +220,6 @@ export const deduplicateConvexRecords = mutation({
       }
     }
 
-    return { deletedCount, remainingCount: all.length - deletedCount };
-  }
-});
-
-export const clearAllRecords = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const all = await ctx.db.query("records").collect();
-    for (const rec of all) {
-      await ctx.db.delete(rec._id);
-    }
-    return all.length;
+    return { deletedCount, remainingCount: records.length - deletedCount };
   }
 });

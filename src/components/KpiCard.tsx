@@ -54,33 +54,33 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between ${getVariantStyles()} ${
+      className={`rounded-2xl p-3.5 sm:p-4 md:p-5 border transition-all duration-200 flex flex-col justify-between ${getVariantStyles()} ${
         onClick ? 'cursor-pointer hover:scale-[1.01]' : ''
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white/80' : 'text-zinc-500'}`}>
+      <div className="flex items-start justify-between gap-1.5">
+        <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate ${isDark ? 'text-white/80' : 'text-zinc-500'}`}>
           {title}
         </span>
-        <div className={`p-2.5 rounded-xl ${isDark ? 'bg-white/15 text-white' : 'bg-zinc-100 text-[#FF4F00]'}`}>
+        <div className={`p-1.5 sm:p-2 rounded-xl shrink-0 ${isDark ? 'bg-white/15 text-white' : 'bg-zinc-100 text-[#FF4F00]'}`}>
           {icon}
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="text-3xl font-black tracking-tight leading-none">
+      <div className="mt-2 sm:mt-3">
+        <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-none truncate">
           {typeof value === 'number' ? value.toLocaleString('pt-BR') : value}
         </div>
 
         {(subtitle || badgeText) && (
-          <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap text-xs">
+          <div className="mt-2 flex items-center justify-between gap-1.5 flex-wrap text-[11px] sm:text-xs">
             {subtitle && (
-              <span className={isDark ? 'text-white/70' : 'text-zinc-500'}>
+              <span className={`truncate ${isDark ? 'text-white/70' : 'text-zinc-500'}`}>
                 {subtitle}
               </span>
             )}
             {badgeText && (
-              <span className={`px-2 py-0.5 rounded-full border text-[11px] font-bold ${
+              <span className={`px-2 py-0.5 rounded-full border text-[10px] sm:text-[11px] font-bold shrink-0 ${
                 isDark ? 'bg-white/20 text-white border-white/30' : getBadgeStyles()
               }`}>
                 {badgeText}

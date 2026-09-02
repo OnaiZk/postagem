@@ -138,14 +138,14 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Header filter and export bar */}
-      <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-[#FF4F00]" />
               Planilha Geral de Protocolos
             </h1>
-            <p className="text-xs text-zinc-500">
+            <p className="text-[11px] sm:text-xs text-zinc-500">
               Visualização, filtros e exportação dos dados históricos e novos lançamentos
             </p>
           </div>
@@ -153,21 +153,21 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
           <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap">
             <button
               onClick={handleExportFiltered}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition-colors"
             >
-              <Download className="w-4 h-4" /> Exportar Excel (.xlsx)
+              <Download className="w-4 h-4" /> <span className="hidden sm:inline">Exportar</span> Excel
             </button>
 
             <button
               onClick={() => exportToCSV(filteredAndSortedRecords)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 rounded-xl text-xs font-bold transition-colors"
+              className="px-3 py-2 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 rounded-xl text-xs font-bold transition-colors"
             >
               CSV
             </button>
 
             <button
               onClick={onOpenChecklist}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#FF4F00] hover:bg-[#e04500] text-black font-extrabold rounded-xl text-xs shadow transition-transform active:scale-95 ml-auto lg:ml-0"
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-[#FF4F00] hover:bg-[#e04500] text-black font-extrabold rounded-xl text-xs shadow transition-transform active:scale-95 ml-auto lg:ml-0"
             >
               <PlusCircle className="w-4 h-4" /> Novo Recebimento
             </button>
@@ -175,7 +175,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-zinc-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 pt-2 border-t border-zinc-100">
           {/* Search box */}
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -245,17 +245,18 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
         </div>
 
         {/* Counter Summary Strip */}
-        <div className="flex items-center justify-between text-xs text-zinc-600 bg-zinc-50 p-2.5 rounded-xl border border-zinc-200">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-zinc-600 bg-zinc-50 p-2.5 rounded-xl border border-zinc-200">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <span>
               Encontrados: <strong className="text-zinc-900 font-bold">{filteredAndSortedRecords.length.toLocaleString('pt-BR')}</strong> protocolos
             </span>
+            <span className="hidden xs:inline">•</span>
             <span>
-              Volume Total: <strong className="text-[#FF4F00] font-black">{totalCartazesFiltrados.toLocaleString('pt-BR')}</strong> cartazes
+              Total: <strong className="text-[#FF4F00] font-black">{totalCartazesFiltrados.toLocaleString('pt-BR')}</strong> cartazes
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span>Linhas por página:</span>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <span className="text-[11px] text-zinc-500">Linhas / pág:</span>
             <select
               value={pageSize}
               onChange={(e) => {
@@ -428,16 +429,16 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
         </div>
 
         {/* Pagination Bar */}
-        <div className="bg-zinc-50 p-4 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="text-zinc-500">
-            Mostrando página <strong className="text-zinc-900">{currentPage}</strong> de <strong className="text-zinc-900">{totalPages}</strong> ({filteredAndSortedRecords.length.toLocaleString('pt-BR')} itens)
+        <div className="bg-zinc-50 p-3 sm:p-4 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-center sm:text-left">
+          <div className="text-zinc-500 text-[11px] sm:text-xs">
+            Página <strong className="text-zinc-900">{currentPage}</strong> de <strong className="text-zinc-900">{totalPages}</strong> ({filteredAndSortedRecords.length.toLocaleString('pt-BR')} itens)
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-2.5 py-1.5 rounded-lg border border-zinc-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 font-bold"
+              className="px-2 sm:px-2.5 py-1.5 rounded-lg border border-zinc-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 font-bold text-[11px] sm:text-xs"
             >
               « Primeiro
             </button>
@@ -449,7 +450,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <span className="px-3 py-1 bg-black text-white font-bold rounded-lg">
+            <span className="px-2.5 sm:px-3 py-1 bg-black text-white font-bold rounded-lg text-xs">
               {currentPage}
             </span>
 
@@ -463,7 +464,7 @@ export const DataTableView: React.FC<DataTableViewProps> = ({
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-2.5 py-1.5 rounded-lg border border-zinc-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 font-bold"
+              className="px-2 sm:px-2.5 py-1.5 rounded-lg border border-zinc-300 bg-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 font-bold text-[11px] sm:text-xs"
             >
               Último »
             </button>

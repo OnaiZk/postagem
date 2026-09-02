@@ -168,6 +168,18 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleDeleteRecord = async (record: PostagemRecord) => {
+    const identifier = record.protocolo_os_nf 
+      ? `OS #${record.protocolo_os_nf} (${record.campanha})` 
+      : record.campanha || 'este checklist';
+    
+    if (window.confirm(`Deseja realmente apagar o checklist ${identifier}? Esta ação não pode ser desfeita.`)) {
+      await dbService.deleteRecord(record.id);
+      if (selectedRecord?.id === record.id) setSelectedRecord(null);
+      if (editingRecord?.id === record.id) setEditingRecord(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F4F6] text-zinc-900 flex flex-col font-sans">
       {/* Top Navbar */}
@@ -208,7 +220,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 min-w-0">
         {loading ? (
           <div className="h-96 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-10 h-10 text-[#FF4F00] animate-spin" />
@@ -233,14 +245,18 @@ export const App: React.FC = () => {
                 editingRecord={editingRecord}
                 onCancelEdit={handleCancelEdit}
                 onViewDailyReport={() => setActiveTab('daily_report')}
+                onDeleteRecord={handleDeleteRecord}
+                onSelectRecord={(rec) => setSelectedRecord(rec)}
+                onEditRecord={(rec) => handleOpenChecklist(rec)}
               />
             )}
 
             {activeTab === 'daily_report' && (
               <DailyReportView
                 records={records}
-                onOpenChecklist={() => handleOpenChecklist()}
+                onOpenChecklist={(rec) => handleOpenChecklist(rec)}
                 onSelectRecord={(rec) => setSelectedRecord(rec)}
+                onDeleteRecord={handleDeleteRecord}
               />
             )}
 
@@ -264,22 +280,22 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-black text-zinc-400 text-xs border-t border-zinc-800 py-6 px-4 no-print mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FF4F00]" />
+      <footer className="bg-black text-zinc-400 text-xs border-t border-zinc-800 py-5 sm:py-6 px-4 no-print mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF4F00] shrink-0" />
             <span className="font-bold text-white">Eletromidia</span>
-            <span className="text-zinc-500">•</span>
-            <span>Controle de Recebimento de Postagem em Abrigos</span>
+            <span className="text-zinc-500 hidden sm:inline">•</span>
+            <span className="text-zinc-400">Controle de Recebimento de Postagem em Abrigos</span>
           </div>
-          <div className="flex items-center gap-4 text-zinc-500">
-            <span>Perfil Ativo: <strong className={role === 'lider' ? 'text-[#FF4F00]' : 'text-[#FECC14]'}>{role === 'lider' ? '👑 Líder' : '🔧 Técnico'}</strong></span>
+          <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3 flex-wrap text-zinc-500 text-[11px] sm:text-xs">
+            <span>Perfil: <strong className={role === 'lider' ? 'text-[#FF4F00]' : 'text-[#FECC14]'}>{role === 'lider' ? '👑 Líder' : '🔧 Técnico'}</strong></span>
             <span>•</span>
-            <span>Base Histórica 2017 - 2026</span>
+            <span>2017 - 2026</span>
             <span>•</span>
             <span>Nuvem Convex</span>
             <span>•</span>
-            <span>PWA Instalável</span>
+            <span>PWA</span>
           </div>
         </div>
       </footer>
@@ -290,9 +306,10 @@ export const App: React.FC = () => {
           record={selectedRecord}
           onClose={() => setSelectedRecord(null)}
           onEdit={(rec) => {
-            if (role === 'lider') {
-              handleOpenChecklist(rec);
-            }
+            handleOpenChecklist(rec);
+          }}
+          onDelete={async (rec) => {
+            await handleDeleteRecord(rec);
           }}
         />
       )}

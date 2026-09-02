@@ -115,15 +115,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Subtle top brand accent line */}
       <div className="h-[2px] w-full bg-[#FF4F00]" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 gap-2 sm:gap-4">
           
-          {/* Left Area: Logo + Nav Tabs */}
-          <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+          {/* Left Area: Logo + Desktop Nav Tabs */}
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             {/* Brand / Logo */}
             <div 
               onClick={handleLogoClick}
-              className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
+              className="flex items-center gap-2 cursor-pointer select-none group shrink-0"
             >
               <div className="w-8 h-8 rounded-lg bg-[#FF4F00] flex items-center justify-center shadow-sm group-hover:brightness-110 transition-all">
                 <img 
@@ -135,17 +135,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-base tracking-tight group-hover:text-zinc-200 transition-colors">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-white text-sm sm:text-base tracking-tight group-hover:text-zinc-200 transition-colors">
                   eletromidia
                 </span>
-                <span className="text-zinc-600 font-light text-sm hidden sm:inline">/</span>
+                <span className="text-zinc-600 font-light text-sm hidden xs:inline sm:inline">/</span>
                 <span className="text-xs font-medium text-zinc-400 hidden sm:inline">Postagem</span>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shrink-0">
+            {/* Desktop Navigation Tabs (Visible on lg+) */}
+            <nav className="hidden lg:flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shrink-0">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
@@ -160,9 +160,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     }`}
                   >
                     <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF4F00]' : 'text-zinc-400'}`} />
-                    <span className="hidden xs:inline sm:inline">{item.label}</span>
+                    <span>{item.label}</span>
                     {item.count !== undefined && item.count > 0 && (
-                      <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full hidden xl:inline ${
+                      <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
                         isActive ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800/80 text-zinc-400'
                       }`}>
                         {item.count > 999 ? `${(item.count / 1000).toFixed(1)}k` : item.count}
@@ -175,33 +175,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Right Area: Minimalist Action Controls & Role Badge */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Role Profile Switcher */}
             {isLeader ? (
-              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
-                <span className="px-2.5 py-1 text-[11px] font-black text-[#FF4F00] flex items-center gap-1 rounded-lg bg-[#FF4F00]/10 border border-[#FF4F00]/20">
-                  <Crown className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-0.5 sm:p-1 rounded-xl">
+                <span className="px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-black text-[#FF4F00] flex items-center gap-1 rounded-lg bg-[#FF4F00]/10 border border-[#FF4F00]/20">
+                  <Crown className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   <span className="hidden md:inline">Líder (Gestão)</span>
+                  <span className="md:hidden">Líder</span>
                 </span>
                 <button
                   onClick={onLockToTechnician}
                   title="Bloquear / Voltar para Modo Técnico"
-                  className="px-2.5 py-1 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
+                  className="px-1.5 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
                 >
                   <Lock className="w-3 h-3" />
                   <span className="hidden sm:inline">Bloquear</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
-                <span className="px-2.5 py-1 text-[11px] font-bold text-[#FECC14] flex items-center gap-1 rounded-lg bg-[#FECC14]/10 border border-[#FECC14]/20">
-                  <Wrench className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Técnico</span>
+              <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 p-0.5 sm:p-1 rounded-xl">
+                <span className="px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-[#FECC14] flex items-center gap-1 rounded-lg bg-[#FECC14]/10 border border-[#FECC14]/20">
+                  <Wrench className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                  <span>Técnico</span>
                 </span>
                 <button
                   onClick={onOpenLeaderAuth}
                   title="Acesso de Gestão / Líder"
-                  className="px-2.5 py-1 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
+                  className="px-1.5 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
                 >
                   <Lock className="w-3 h-3 text-[#FF4F00]" />
                   <span className="hidden sm:inline">Líder</span>
@@ -214,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenBackup}
                 title={isAutoSyncActive ? 'Auto-Sync Excel & Convex ativo' : 'Sincronização Convex & Backup'}
-                className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-2 text-xs font-medium active:scale-95"
+                className="h-8 sm:h-9 px-2 sm:px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-1.5 sm:gap-2 text-xs font-medium active:scale-95"
               >
                 <Cloud className={`w-3.5 h-3.5 ${isConvexOnline ? 'text-emerald-400' : 'text-zinc-500'}`} />
                 <span className="hidden lg:inline">Sincronizar</span>
@@ -232,7 +233,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={handleInstallPWA}
                 title="Instalar aplicativo (PWA)"
-                className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-1.5 text-xs font-medium active:scale-95"
+                className="h-8 sm:h-9 px-2 sm:px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-1.5 text-xs font-medium active:scale-95 hidden sm:flex"
               >
                 <Download className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="hidden xl:inline">Instalar</span>
@@ -242,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Primary Action: Novo Recebimento */}
             <button
               onClick={onOpenChecklist}
-              className="h-9 px-3.5 rounded-lg bg-[#FF4F00] hover:bg-[#ff621e] text-black font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+              className="h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-lg bg-[#FF4F00] hover:bg-[#ff621e] text-black font-bold text-xs flex items-center gap-1 sm:gap-1.5 transition-all shadow-sm active:scale-95 whitespace-nowrap shrink-0"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span className="hidden sm:inline">Novo Recebimento</span>
@@ -250,6 +251,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Mobile & Tablet Horizontal Scrollable Nav Tabs (Visible below lg) */}
+      <div className="lg:hidden border-t border-zinc-800/60 bg-[#0c0c0e]/95 px-2.5 sm:px-4 py-1.5 overflow-x-auto no-scrollbar">
+        <nav className="flex items-center gap-1 w-max mx-auto">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all duration-150 whitespace-nowrap ${
+                  isActive
+                    ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700 font-semibold'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF4F00]' : 'text-zinc-400'}`} />
+                <span>{item.label}</span>
+                {item.count !== undefined && item.count > 0 && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800/80 text-zinc-400'
+                  }`}>
+                    {item.count > 999 ? `${(item.count / 1000).toFixed(1)}k` : item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );

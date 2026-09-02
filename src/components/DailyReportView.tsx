@@ -14,6 +14,8 @@ import {
   Clock,
   PlusCircle,
   Eye,
+  Edit3,
+  Trash2,
   Check,
   Package
 } from 'lucide-react';
@@ -25,12 +27,14 @@ interface DailyReportViewProps {
   records: PostagemRecord[];
   onOpenChecklist: (record?: PostagemRecord) => void;
   onSelectRecord: (record: PostagemRecord) => void;
+  onDeleteRecord?: (record: PostagemRecord) => void;
 }
 
 export const DailyReportView: React.FC<DailyReportViewProps> = ({
   records,
   onOpenChecklist,
-  onSelectRecord
+  onSelectRecord,
+  onDeleteRecord
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
@@ -140,30 +144,30 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-black text-white p-6 rounded-3xl border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 no-print">
-        <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-[#FF4F00] text-black rounded-2xl font-black shadow-lg">
-            <ClipboardCheck className="w-7 h-7" />
+      <div className="bg-black text-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4 no-print">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 sm:p-3 bg-[#FF4F00] text-black rounded-xl sm:rounded-2xl font-black shadow-lg shrink-0">
+            <ClipboardCheck className="w-6 sm:w-7 h-6 sm:h-7" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black tracking-tight text-white">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-xl font-black tracking-tight text-white">
                 Relatório Diário de Recebimento
               </h1>
-              <span className="bg-[#FECC14] text-black text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full">
+              <span className="bg-[#FECC14] text-black text-[10px] sm:text-[11px] font-black uppercase px-2 sm:px-2.5 py-0.5 rounded-full">
                 Turno Diário
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5">
               Consolidação de materiais recebidos no galpão e prestação de contas diária
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           {/* Date Picker */}
-          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 px-3 py-2 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 px-2.5 sm:px-3 py-2 rounded-xl">
             <Calendar className="w-4 h-4 text-[#FF4F00]" />
             <input
               type="date"
@@ -178,7 +182,7 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
             onClick={handleQuickSync}
             disabled={isSyncing}
             title="Sincronizar em tempo real com o servidor e outros aparelhos"
-            className="px-3 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 active:scale-95"
+            className="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 active:scale-95"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-[#FF4F00] ${isSyncing ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">{isSyncing ? 'Atualizando...' : 'Sincronizar'}</span>
@@ -187,20 +191,20 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
           {/* Copy for WhatsApp */}
           <button
             onClick={handleCopyReport}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md active:scale-95 ${
+            className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 sm:gap-2 transition-all shadow-md active:scale-95 ${
               copied
                 ? 'bg-emerald-500 text-white shadow-emerald-500/30'
                 : 'bg-[#FECC14] hover:bg-amber-400 text-black shadow-amber-500/20'
             }`}
           >
             {copied ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Copiado para o WhatsApp!' : 'Copiar para WhatsApp'}</span>
+            <span className="truncate">{copied ? 'Copiado!' : 'WhatsApp'}</span>
           </button>
 
           {/* Print Report */}
           <button
             onClick={handlePrint}
-            className="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs flex items-center gap-1.5 border border-zinc-700 transition-colors"
+            className="px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs flex items-center gap-1.5 border border-zinc-700 transition-colors"
           >
             <Printer className="w-4 h-4" />
             <span className="hidden sm:inline">Imprimir</span>
@@ -209,10 +213,10 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
           {/* Novo Recebimento button */}
           <button
             onClick={() => onOpenChecklist()}
-            className="px-4 py-2.5 rounded-xl bg-[#FF4F00] hover:bg-[#ff621e] text-black font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#FF4F00] hover:bg-[#ff621e] text-black font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 whitespace-nowrap"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Novo Lançamento</span>
+            <span>Novo</span>
           </button>
         </div>
       </div>
@@ -229,50 +233,50 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
       )}
 
       {/* KPI Cards for the Day */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-[#FF4F00] flex items-center justify-center font-bold">
-            <Package className="w-5 h-5" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
+        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-orange-50 border border-orange-200 text-[#FF4F00] flex items-center justify-center font-bold shrink-0">
+            <Package className="w-4 sm:w-5 h-4 sm:h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-zinc-500 uppercase block">Total Cartazes</span>
-            <span className="text-xl font-black text-zinc-900 leading-none">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase block truncate">Total Cartazes</span>
+            <span className="text-lg sm:text-xl font-black text-zinc-900 leading-none truncate block">
               {stats.totalCartazes.toLocaleString('pt-BR')}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-200 text-[#4E18FF] flex items-center justify-center font-bold">
-            <FileText className="w-5 h-5" />
+        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-purple-50 border border-purple-200 text-[#4E18FF] flex items-center justify-center font-bold shrink-0">
+            <FileText className="w-4 sm:w-5 h-4 sm:h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-zinc-500 uppercase block">Entregas / NFs</span>
-            <span className="text-xl font-black text-zinc-900 leading-none">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase block truncate">Entregas / NFs</span>
+            <span className="text-lg sm:text-xl font-black text-zinc-900 leading-none truncate block">
               {stats.totalEntregas}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-[#3D7700] flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-5 h-5" />
+        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-50 border border-emerald-200 text-[#3D7700] flex items-center justify-center font-bold shrink-0">
+            <CheckCircle2 className="w-4 sm:w-5 h-4 sm:h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-zinc-500 uppercase block">Conferidos 100%</span>
-            <span className="text-xl font-black text-emerald-700 leading-none">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase block truncate">Conferidos 100%</span>
+            <span className="text-lg sm:text-xl font-black text-emerald-700 leading-none truncate block">
               {stats.conferidos}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-bold">
-            <AlertTriangle className="w-5 h-5" />
+        <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-zinc-200 shadow-sm flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-bold shrink-0">
+            <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-bold text-zinc-500 uppercase block">Divergências/Avarias</span>
-            <span className="text-xl font-black text-rose-600 leading-none">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase block truncate">Divergências</span>
+            <span className="text-lg sm:text-xl font-black text-rose-600 leading-none truncate block">
               {stats.divergencias}
             </span>
           </div>
@@ -280,8 +284,8 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
       </div>
 
       {/* List of Day's Records */}
-      <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-zinc-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-zinc-50/50">
           <div>
             <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <ClipboardCheck className="w-4 h-4 text-[#FF4F00]" />
@@ -396,10 +400,26 @@ export const DailyReportView: React.FC<DailyReportViewProps> = ({
                     <button
                       onClick={() => onSelectRecord(r)}
                       title="Ver Detalhes e Fotos"
-                      className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs flex items-center justify-center transition-colors"
+                      className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs flex items-center justify-center transition-colors shadow-sm"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => onOpenChecklist(r)}
+                      title="Editar Checklist"
+                      className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center transition-colors border border-amber-200 shadow-sm"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    {onDeleteRecord && (
+                      <button
+                        onClick={() => onDeleteRecord(r)}
+                        title="Excluir Checklist"
+                        className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center justify-center transition-colors border border-rose-200 shadow-sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

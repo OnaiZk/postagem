@@ -12,7 +12,8 @@ import {
   Printer, 
   Download,
   Image as ImageIcon,
-  ZoomIn
+  ZoomIn,
+  Trash2
 } from 'lucide-react';
 import { PostagemRecord } from '../types';
 
@@ -20,12 +21,14 @@ interface RecordDetailModalProps {
   record: PostagemRecord | null;
   onClose: () => void;
   onEdit?: (record: PostagemRecord) => void;
+  onDelete?: (record: PostagemRecord) => void;
 }
 
 export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
   record,
   onClose,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
@@ -50,38 +53,38 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-fadeIn">
       <div className="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl border border-zinc-200 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="bg-black text-white p-5 flex items-center justify-between border-b border-zinc-800">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#FF4F00] p-2 rounded-xl text-black font-black text-sm">
-              OS #{record.protocolo_os_nf || 'S/N'}
+        <div className="bg-black text-white p-3.5 sm:p-5 flex items-center justify-between border-b border-zinc-800">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="bg-[#FF4F00] p-1.5 sm:p-2 rounded-xl text-black font-black text-xs sm:text-sm shrink-0">
+              #{record.protocolo_os_nf || 'S/N'}
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Protocolo de Recebimento
-                <span className={`text-xs px-2.5 py-0.5 rounded-full border font-bold ${getStatusBadge()}`}>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base md:text-lg font-bold text-white flex items-center gap-2 flex-wrap">
+                <span className="truncate">Protocolo de Recebimento</span>
+                <span className={`text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full border font-bold ${getStatusBadge()}`}>
                   {record.status}
                 </span>
               </h2>
-              <p className="text-xs text-zinc-400">
-                Registrado em {record.ano} - ID: {record.id}
+              <p className="text-[10px] sm:text-xs text-zinc-400 truncate">
+                {record.ano} - ID: {record.id}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
+            className="p-1.5 sm:p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6">
           {/* Main Info Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
             <div className="bg-zinc-50 p-3.5 rounded-xl border border-zinc-200">
               <span className="text-xs text-zinc-500 font-bold uppercase block flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-[#FF4F00]" /> Gráfica / Fornecedor
@@ -238,7 +241,7 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-zinc-100 border-t border-zinc-200 flex items-center justify-between gap-3">
+        <div className="p-4 bg-zinc-100 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-900 text-white rounded-xl text-xs font-bold transition-colors"
@@ -246,7 +249,17 @@ export const RecordDetailModal: React.FC<RecordDetailModalProps> = ({
             <Printer className="w-4 h-4" /> Imprimir Comprovante
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {onDelete && (
+              <button
+                onClick={() => {
+                  onDelete(record);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+              >
+                <Trash2 className="w-4 h-4" /> Excluir Checklist
+              </button>
+            )}
             {onEdit && (
               <button
                 onClick={() => {

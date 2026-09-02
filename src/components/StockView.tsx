@@ -180,25 +180,25 @@ export const StockView: React.FC<StockViewProps> = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-[#000000] text-white rounded-2xl p-5 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-[#000000] text-white rounded-2xl p-4 sm:p-5 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#FF4F00] text-black rounded-xl font-black shadow-md">
-            <Package className="w-6 h-6" />
+          <div className="p-2.5 sm:p-3 bg-[#FF4F00] text-black rounded-xl font-black shadow-md shrink-0">
+            <Package className="w-5 sm:w-6 h-5 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              Estoque de Postagem & Layouts
-              <span className="bg-[#FECC14] text-black text-[11px] font-black uppercase px-2 py-0.5 rounded-full">
-                Galpão de Cartazes
+            <h1 className="text-base sm:text-xl font-black tracking-tight text-white flex items-center gap-2 flex-wrap">
+              <span>Estoque de Postagem & Layouts</span>
+              <span className="bg-[#FECC14] text-black text-[10px] sm:text-[11px] font-black uppercase px-2 py-0.5 rounded-full">
+                Galpão
               </span>
             </h1>
-            <p className="text-xs text-zinc-400">
+            <p className="text-[11px] sm:text-xs text-zinc-400">
               Controle físico de quantidades disponíveis, fotos de layouts/motivos e baixas para postagem na rua
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
           <button
             onClick={() => exportStockToExcel(stockItems)}
             className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 rounded-xl text-xs font-bold transition-colors"
@@ -210,10 +210,10 @@ export const StockView: React.FC<StockViewProps> = () => {
 
           <button
             onClick={handleOpenNew}
-            className="flex items-center gap-2 bg-[#FF4F00] hover:bg-[#e04500] text-black font-black px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-lg shadow-orange-600/30 transition-transform active:scale-95"
+            className="flex items-center gap-1.5 sm:gap-2 bg-[#FF4F00] hover:bg-[#e04500] text-black font-black px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm shadow-lg shadow-orange-600/30 transition-transform active:scale-95 whitespace-nowrap"
           >
             <PlusCircle className="w-4 h-4 text-black" />
-            <span>Novo Cadastro de Estoque</span>
+            <span>Novo Cadastro</span>
           </button>
         </div>
       </div>

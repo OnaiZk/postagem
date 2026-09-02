@@ -218,15 +218,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Filter and Actions Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3 sm:gap-4">
         {/* Year Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-          <span className="text-xs font-bold text-zinc-500 uppercase mr-1 flex items-center gap-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full md:w-auto pb-1 md:pb-0">
+          <span className="text-xs font-bold text-zinc-500 uppercase mr-1 flex items-center gap-1 shrink-0">
             <Filter className="w-3.5 h-3.5" /> Ano:
           </span>
           <button
             onClick={() => setSelectedYear('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
               selectedYear === 'all'
                 ? 'bg-black text-white shadow-sm'
                 : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
@@ -238,7 +238,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <button
               key={year}
               onClick={() => setSelectedYear(year)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                 selectedYear === year
                   ? 'bg-[#FF4F00] text-black font-extrabold shadow-sm'
                   : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
@@ -250,11 +250,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Quick Period & Action */}
-        <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl text-xs font-bold">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+          <div className="flex items-center bg-zinc-100 p-1 rounded-xl text-xs font-bold overflow-x-auto no-scrollbar">
             <button
               onClick={() => setSelectedPeriod('all')}
-              className={`px-2.5 py-1 rounded-lg transition-colors ${
+              className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
                 selectedPeriod === 'all' ? 'bg-white text-black shadow-xs' : 'text-zinc-600 hover:text-black'
               }`}
             >
@@ -262,7 +262,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
             <button
               onClick={() => setSelectedPeriod('month')}
-              className={`px-2.5 py-1 rounded-lg transition-colors ${
+              className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
                 selectedPeriod === 'month' ? 'bg-white text-black shadow-xs' : 'text-zinc-600 hover:text-black'
               }`}
             >
@@ -270,7 +270,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
             <button
               onClick={() => setSelectedPeriod('today')}
-              className={`px-2.5 py-1 rounded-lg transition-colors ${
+              className={`px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap ${
                 selectedPeriod === 'today' ? 'bg-white text-black shadow-xs' : 'text-zinc-600 hover:text-black'
               }`}
             >
@@ -280,7 +280,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <button
             onClick={onOpenChecklist}
-            className="flex items-center gap-1.5 bg-[#FF4F00] hover:bg-[#e04500] text-black font-black text-xs px-3.5 py-2 rounded-xl shadow-md active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 bg-[#FF4F00] hover:bg-[#e04500] text-black font-black text-xs px-3.5 py-2 rounded-xl shadow-md active:scale-95 transition-transform shrink-0"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Novo Registro</span>
@@ -289,7 +289,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <KpiCard
           title="Total de Protocolos"
           value={kpis.totalRegistros}
@@ -332,44 +332,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Secondary Fast Stats Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm text-xs">
-        <div className="border-r border-zinc-200 pr-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-zinc-200 shadow-sm text-xs">
+        <div className="sm:border-r border-zinc-200 sm:pr-3">
           <span className="text-zinc-500 font-bold uppercase block text-[10px]">Hoje (Entradas)</span>
-          <span className="text-lg font-black text-[#FF4F00]">
-            {kpis.hojeRegistros} <span className="text-xs font-normal text-zinc-600">({kpis.hojeCartazes} cartazes)</span>
+          <span className="text-base sm:text-lg font-black text-[#FF4F00]">
+            {kpis.hojeRegistros} <span className="text-xs font-normal text-zinc-600">({kpis.hojeCartazes} pçs)</span>
           </span>
         </div>
-        <div className="border-r border-zinc-200 pr-3">
+        <div className="sm:border-r border-zinc-200 sm:pr-3">
           <span className="text-zinc-500 font-bold uppercase block text-[10px]">Mês Vigente</span>
-          <span className="text-lg font-black text-zinc-900">
-            {kpis.mesRegistros} <span className="text-xs font-normal text-zinc-600">({kpis.mesCartazes} cartazes)</span>
+          <span className="text-base sm:text-lg font-black text-zinc-900">
+            {kpis.mesRegistros} <span className="text-xs font-normal text-zinc-600">({kpis.mesCartazes} pçs)</span>
           </span>
         </div>
-        <div className="border-r border-zinc-200 pr-3">
-          <span className="text-zinc-500 font-bold uppercase block text-[10px]">Taxa de Conformidade</span>
-          <span className="text-lg font-black text-emerald-700">{kpis.taxaConferido}% 100% OK</span>
+        <div className="sm:border-r border-zinc-200 sm:pr-3">
+          <span className="text-zinc-500 font-bold uppercase block text-[10px]">Conformidade</span>
+          <span className="text-base sm:text-lg font-black text-emerald-700">{kpis.taxaConferido}% OK</span>
         </div>
         <div>
-          <span className="text-zinc-500 font-bold uppercase block text-[10px]">Média por Entrega</span>
-          <span className="text-lg font-black text-purple-700">
-            {kpis.totalRegistros > 0 ? Math.round(kpis.totalCartazes / kpis.totalRegistros) : 0} peças/NF
+          <span className="text-zinc-500 font-bold uppercase block text-[10px]">Média / Entrega</span>
+          <span className="text-base sm:text-lg font-black text-purple-700">
+            {kpis.totalRegistros > 0 ? Math.round(kpis.totalCartazes / kpis.totalRegistros) : 0} peças
           </span>
         </div>
       </div>
 
       {/* Charts Row 1: Monthly / Yearly Volume + Donut Share */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Monthly evolution */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#FF4F00]" />
                 {selectedYear === 'all' ? 'Evolução Anual de Cartazes (2017 - 2026)' : `Volume Mensal de Cartazes (${selectedYear})`}
               </h3>
-              <p className="text-xs text-zinc-500">Distribuição temporal do volume de peças recebidas</p>
+              <p className="text-[11px] sm:text-xs text-zinc-500">Distribuição temporal do volume de peças recebidas</p>
             </div>
-            <span className="px-2.5 py-1 bg-orange-100 text-[#FF4F00] rounded-lg text-xs font-extrabold">
+            <span className="px-2.5 py-1 bg-orange-100 text-[#FF4F00] rounded-lg text-xs font-extrabold shrink-0">
               Total: {kpis.totalCartazes.toLocaleString('pt-BR')} peças
             </span>
           </div>
@@ -398,12 +398,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Share by Gráfica */}
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm flex flex-col justify-between">
           <div className="mb-2">
-            <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#4E18FF]" /> Participação por Gráfica
             </h3>
-            <p className="text-xs text-zinc-500">Volume de cartazes por fornecedor</p>
+            <p className="text-[11px] sm:text-xs text-zinc-500">Volume de cartazes por fornecedor</p>
           </div>
 
           <div className="h-64 w-full relative">
@@ -468,15 +468,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Charts Row 2: Top Clientes + Horários de Pico */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Clientes */}
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#3D7700]" /> Top Clientes / Anunciantes
               </h3>
-              <p className="text-xs text-zinc-500">Maiores volumes de postagem em abrigos</p>
+              <p className="text-[11px] sm:text-xs text-zinc-500">Maiores volumes de postagem em abrigos</p>
             </div>
           </div>
 
@@ -498,13 +498,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Horários de Pico */}
-        <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#FECC14]" /> Horários de Pico no Galpão
               </h3>
-              <p className="text-xs text-zinc-500">Distribuição de recebimento durante os turnos do dia</p>
+              <p className="text-[11px] sm:text-xs text-zinc-500">Distribuição de recebimento durante os turnos do dia</p>
             </div>
           </div>
 
@@ -523,17 +523,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Latest Receipts Table Preview */}
-      <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white p-4 sm:p-6 rounded-2xl border border-zinc-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-xs sm:text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
               <FileText className="w-4 h-4 text-[#FF4F00]" /> Últimos Protocolos Registrados
             </h3>
-            <p className="text-xs text-zinc-500">Visualização rápida das entradas mais recentes</p>
+            <p className="text-[11px] sm:text-xs text-zinc-500">Visualização rápida das entradas mais recentes</p>
           </div>
           <button
             onClick={onOpenTable}
-            className="flex items-center gap-1 text-xs font-bold text-[#FF4F00] hover:text-[#e04500]"
+            className="flex items-center gap-1 text-xs font-bold text-[#FF4F00] hover:text-[#e04500] shrink-0"
           >
             Ver Planilha Completa <ChevronRight className="w-4 h-4" />
           </button>

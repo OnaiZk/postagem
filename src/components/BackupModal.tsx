@@ -227,40 +227,40 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-zinc-200 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="bg-black text-white p-5 flex items-center justify-between border-b border-zinc-800 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#FF4F00] text-black rounded-xl font-bold">
+        <div className="bg-black text-white p-3.5 sm:p-5 flex items-center justify-between border-b border-zinc-800 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="p-1.5 sm:p-2 bg-[#FF4F00] text-black rounded-xl font-bold shrink-0">
               <Cloud className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Sincronização Automática & Convex Cloud</h2>
-              <p className="text-xs text-zinc-400">Atualização em tempo real quando a planilha for editada</p>
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-white truncate">Sincronização Automática & Convex Cloud</h2>
+              <p className="text-[10px] sm:text-xs text-zinc-400 truncate">Atualização em tempo real quando a planilha for editada</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white">
+          <button onClick={onClose} className="p-1.5 sm:p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white shrink-0 ml-2">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
           {statusMsg && (
-            <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
+            <div className={`p-3 sm:p-3.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
               statusMsg.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
             }`}>
-              {statusMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+              {statusMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
               <span>{statusMsg.text}</span>
             </div>
           )}
 
           {/* Auto-Sync da Planilha */}
-          <div className="bg-amber-50 p-4 rounded-xl border-2 border-amber-300 space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="bg-amber-50 p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-400 text-black rounded-lg font-black">
+                <div className="p-1.5 sm:p-2 bg-amber-400 text-black rounded-lg font-black shrink-0">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
@@ -270,7 +270,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
                   </p>
                 </div>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase shrink-0 ${
                 isAutoSyncActive ? 'bg-emerald-600 text-white animate-pulse' : 'bg-zinc-200 text-zinc-700'
               }`}>
                 {isAutoSyncActive ? 'Ativo ✓' : 'Inativo'}
