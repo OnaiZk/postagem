@@ -13,13 +13,23 @@ export const list = query({
         .query("records")
         .withIndex("by_ano", (q) => q.eq("ano", args.ano!))
         .collect();
-      return results;
+      return results.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
     }
     const all = await q.collect();
-    // Sort descending by data
     return all.sort((a, b) => (b.data || "").localeCompare(a.data || ""));
   }
 });
+
+export const getById = query({
+  args: { recordId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("records")
+      .withIndex("by_recordId", (q) => q.eq("recordId", args.recordId))
+      .first();
+  }
+});
+
 
 export const getByProtocolo = query({
   args: { protocolo: v.string() },

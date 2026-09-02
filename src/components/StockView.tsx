@@ -25,6 +25,8 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { StockItem, StockStatus, StockMaterialType } from '../types';
 import { dbService } from '../services/db';
 import { StockFormModal } from './StockFormModal';
@@ -36,8 +38,31 @@ interface StockViewProps {
 }
 
 export const StockView: React.FC<StockViewProps> = () => {
-  const [stockItems, setStockItems] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const rawStockItems = useQuery(api.stock.listStockItems, {});
+  const stockItems: StockItem[] = useMemo(() => {
+    if (!rawStockItems) return [];
+    return rawStockItems.map((item: any) => ({
+      id: item.stockId || item._id,
+      cliente: item.cliente,
+      campanha: item.campanha,
+      grafica: item.grafica,
+      tipo_material: item.tipo_material,
+      quantidade_total: item.quantidade_total,
+      quantidade_disponivel: item.quantidade_disponivel,
+      quantidade_postada: item.quantidade_postada,
+      localizacao: item.localizacao,
+      lote_os: item.lote_os,
+      data_entrada: item.data_entrada,
+      tecnico_responsavel: item.tecnico_responsavel,
+      status: item.status as any,
+      observacoes: item.observacoes,
+      fotos_layout: item.fotos_layout || [],
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
+  }, [rawStockItems]);
+
+  const loading = rawStockItems === undefined;
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedClient, setSelectedClient] = useState<string>('all');
@@ -50,24 +75,6 @@ export const StockView: React.FC<StockViewProps> = () => {
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const loadStock = useCallback(async () => {
-    try {
-      const items = await dbService.getAllStockItems();
-      setStockItems(items);
-    } catch (err) {
-      console.error('Erro ao carregar estoque:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadStock();
-    const unsub = dbService.subscribe(() => {
-      loadStock();
-    });
-    return () => unsub();
-  }, [loadStock]);
 
   // Clients list
   const availableClients = useMemo(() => {

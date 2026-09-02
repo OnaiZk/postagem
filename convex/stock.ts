@@ -97,6 +97,109 @@ export const createMovement = mutation({
   }
 });
 
+export const getStockItem = query({
+  args: { stockId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("stock_items")
+      .withIndex("by_stockId", (q) => q.eq("stockId", args.stockId))
+      .first();
+  }
+});
+
+export const quickAdjustStock = mutation({
+  args: {
+    stockId: v.string(),
+    delta: v.number(), // positive for postagem/saída (- saldo), negative for return (+ saldo)
+    tipo: v.string(), // "Postagem", "Devolução", "Ajuste", etc.
+    motivo: v.optional(v.string()),
+    tecnico: v.string()
+  },
+  handler: async (ctx, args) => {
+    const item = await ctx.db
+      .query("stock_items")
+      .withIndex("by_stockId", (q) => q.eq("stockId", args.stockId))
+      .first();
+
+    if (!item) {
+      throw new Error(`Item de estoque #${args.stockId} não encontrado.`);
+    }
+
+    const saldoAnterior = item.quantidade_disponivel;
+    const absDelta = Math.abs(args.delta);
+    let novoDisponivel = item.quantidade_disponivel;
+    let novoPostado = item.quantidade_postada || 0;
+
+    if (args.tipo === 'Entrada' || args.tipo === 'Devolução') {
+      novoDisponivel = item.quantidade_disponivel + absDelta;
+      if (args.tipo === 'Devolução' && novoPostado >= absDelta) {
+        novoPostado -= absDelta;
+      }
+    } else {
+      // Saída / Postagem / Baixa
+      novoDisponivel = Math.max(0, item.quantidade_disponivel - absDelta);
+      novoPostado = novoPostado + absDelta;
+    }
+
+
+    let status = item.status;
+    if (novoDisponivel === 0) {
+      status = "Esgotado";
+    } else if (novoDisponivel <= 10) {
+      status = "Baixo Estoque";
+    } else {
+      status = "Disponível";
+    }
+
+    const now = new Date().toISOString();
+
+    await ctx.db.patch(item._id, {
+      quantidade_disponivel: novoDisponivel,
+      quantidade_postada: novoPostado,
+      status,
+      updated_at: now
+    });
+
+    const movId = `mov_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    await ctx.db.insert("stock_movements", {
+      movementId: movId,
+      stock_id: args.stockId,
+      campanha: item.campanha,
+      cliente: item.cliente,
+      tipo: args.tipo,
+      quantidade: Math.abs(args.delta),
+      saldo_anterior: saldoAnterior,
+      saldo_atual: novoDisponivel,
+      motivo: args.motivo,
+      tecnico: args.tecnico || "Técnico de Campo",
+      data_hora: now
+    });
+
+    return {
+      ...item,
+      quantidade_disponivel: novoDisponivel,
+      quantidade_postada: novoPostado,
+      status,
+      updated_at: now
+    };
+  }
+});
+
+export const clearAllStock = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query("stock_items").collect();
+    for (const it of items) {
+      await ctx.db.delete(it._id);
+    }
+    const movs = await ctx.db.query("stock_movements").collect();
+    for (const m of movs) {
+      await ctx.db.delete(m._id);
+    }
+    return { itemsDeleted: items.length, movementsDeleted: movs.length };
+  }
+});
+
 export const listMovements = query({
   args: {
     stock_id: v.optional(v.string())
@@ -112,3 +215,5 @@ export const listMovements = query({
     return all.sort((a, b) => b.data_hora.localeCompare(a.data_hora));
   }
 });
+
+

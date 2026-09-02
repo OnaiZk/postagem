@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import { PostagemRecord, UserRole } from './types';
 import { dbService } from './services/db';
 import { authService } from './services/authService';
 import { convexService } from './services/convexService';
-import { syncService, SyncStatus } from './services/syncService';
 import { parseExcelFile } from './services/excelService';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
@@ -19,8 +20,35 @@ import { Loader2, Zap } from 'lucide-react';
 export const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(() => authService.getRole());
   const [isLeaderAuthOpen, setIsLeaderAuthOpen] = useState<boolean>(false);
-  const [records, setRecords] = useState<PostagemRecord[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  
+  // Assinatura reativa em tempo real direto do Convex Cloud via WebSockets
+  const rawConvexRecords = useQuery(api.records.list, {});
+  const records: PostagemRecord[] = useMemo(() => {
+    if (!rawConvexRecords) return [];
+    return rawConvexRecords.map((item: any) => ({
+      id: item.recordId || item._id,
+      ano: item.ano,
+      cliente: item.cliente || '',
+      campanha: item.campanha || '',
+      grafica: item.grafica || '',
+      layout: Number(item.layout) || 1,
+      quantidade: Number(item.quantidade) || 0,
+      quantidade_raw: item.quantidade_raw || String(item.quantidade || 0),
+      protocolo_os_nf: item.protocolo_os_nf || '',
+      data: item.data || '',
+      hora: item.hora || '',
+      foto_nf: item.foto_nf,
+      foto_cartaz: item.foto_cartaz,
+      status: item.status as any,
+      observacoes: item.observacoes,
+      conferido_qtd: item.conferido_qtd,
+      conferido_avaria: item.conferido_avaria,
+      conferido_canhoto: item.conferido_canhoto,
+      created_at: item.created_at
+    }));
+  }, [rawConvexRecords]);
+
+  const loading = rawConvexRecords === undefined;
   
   // Default tab based on role: Technician goes straight to checklist, Leader to dashboard
   const [activeTab, setActiveTab] = useState<string>(() => 
@@ -39,26 +67,7 @@ export const App: React.FC = () => {
   const fileHandleRef = useRef<any>(null);
   const lastModifiedRef = useRef<number>(0);
 
-  const loadRecords = useCallback(async () => {
-    try {
-      const data = await dbService.getAllRecords();
-      setRecords(data);
-    } catch (e) {
-      console.error('Erro ao carregar registros:', e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadRecords();
-
-    // Inicializa sincronizador automático em tempo real em segundo plano
-    syncService.init();
-
-    const unsubscribeDb = dbService.subscribe(() => {
-      loadRecords();
-    });
     const unsubscribeAuth = authService.subscribe((newRole) => {
       setRole(newRole);
       if (newRole === 'tecnico') {
@@ -67,10 +76,9 @@ export const App: React.FC = () => {
     });
 
     return () => {
-      unsubscribeDb();
       unsubscribeAuth();
     };
-  }, [loadRecords]);
+  }, []);
 
   // Ensure technician cannot stay on restricted tab
   useEffect(() => {
@@ -242,7 +250,7 @@ export const App: React.FC = () => {
                 onOpenChecklist={() => handleOpenChecklist()}
                 onSelectRecord={(rec) => setSelectedRecord(rec)}
                 onEditRecord={(rec) => handleOpenChecklist(rec)}
-                onDataChanged={loadRecords}
+                onDataChanged={() => {}}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
               />
@@ -295,11 +303,12 @@ export const App: React.FC = () => {
           isOpen={isBackupOpen}
           onClose={() => setIsBackupOpen(false)}
           records={records}
-          onDataChanged={loadRecords}
+          onDataChanged={() => {}}
           onEnableAutoSync={handleEnableAutoSync}
           isAutoSyncActive={isAutoSyncActive}
         />
       )}
+
 
       {/* Leader PIN Unlock Modal */}
       <LeaderAuthModal
