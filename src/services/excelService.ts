@@ -135,23 +135,41 @@ export const parseExcelFile = async (file: File): Promise<PostagemRecord[]> => {
         const importedRecords: PostagemRecord[] = [];
         let idCounter = 1;
 
-        for (const sheetName of workbook.SheetNames) {
+        // Determine sheet order: if sheets start with "NOTAS", sort them chronologically (e.g. NOTAS 2017 -> NOTAS 2026)
+        let sheetNames = workbook.SheetNames;
+        const notasSheets = sheetNames.filter((s) => s.toUpperCase().startsWith('NOTAS'));
+        if (notasSheets.length > 0) {
+          notasSheets.sort((a, b) => {
+            const yA = parseInt(a.replace(/[^0-9]/g, '') || '0', 10);
+            const yB = parseInt(b.replace(/[^0-9]/g, '') || '0', 10);
+            return yA - yB;
+          });
+          sheetNames = notasSheets;
+        }
+
+        for (const sheetName of sheetNames) {
           const sheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, defval: '' });
 
           if (!jsonData || jsonData.length === 0) continue;
 
-          const year = sheetName.replace(/[^0-9]/g, '') || String(new Date().getFullYear());
+          const sheetYear = sheetName.replace(/[^0-9]/g, '') || String(new Date().getFullYear());
           const headers = (jsonData[0] as any[]).map((h) => String(h).toUpperCase().trim());
 
+          const idIdx = headers.findIndex((h) => h === 'ID' || h === 'ID PROTOCOLO' || h === 'RECORD ID');
+          const anoIdx = headers.findIndex((h) => h === 'ANO' || h === 'YEAR');
           const clienteIdx = headers.findIndex((h) => h.includes('CLIENTE'));
           const campanhaIdx = headers.findIndex((h) => h.includes('CAMPANHA'));
           const graficaIdx = headers.findIndex((h) => h.includes('GR') && (h.includes('FICA') || h.includes('AFICA')));
           const layoutIdx = headers.findIndex((h) => h.includes('LAYOUT'));
           const quantIdx = headers.findIndex((h) => h.includes('QUANT'));
-          const protoIdx = headers.findIndex((h) => h.includes('PROTO') || h.includes('OS') || h.includes('NF'));
+          const protoIdx = headers.findIndex((h) => h.includes('PROTO') || h.includes('OS') || h.includes('NF') || h.includes('Nº'));
           const dataIdx = headers.findIndex((h) => h.includes('DATA'));
           const horaIdx = headers.findIndex((h) => h.includes('HORA'));
+          const statusIdx = headers.findIndex((h) => h.includes('STATUS'));
+          const obsIdx = headers.findIndex((h) => h.includes('OBS'));
+          const fotoNfIdx = headers.findIndex((h) => h.includes('FOTO NF') || h.includes('FOTO_NF'));
+          const fotoCartazIdx = headers.findIndex((h) => h.includes('FOTO CARTAZ') || h.includes('FOTO_CARTAZ'));
 
           for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i] as any[];
@@ -168,10 +186,18 @@ export const parseExcelFile = async (file: File): Promise<PostagemRecord[]> => {
             const proto = protoIdx >= 0 ? String(row[protoIdx] || '').trim() : '';
             const dataVal = dataIdx >= 0 ? row[dataIdx] : '';
             const horaVal = horaIdx >= 0 ? row[horaIdx] : '';
+            const existingId = idIdx >= 0 ? String(row[idIdx] || '').trim() : '';
+            const rowYear = anoIdx >= 0 ? String(row[anoIdx] || '').trim() : '';
+
+            const finalYear = rowYear || sheetYear || String(new Date().getFullYear());
 
             let dataStr = '';
             if (dataVal instanceof Date) {
               dataStr = dataVal.toISOString().split('T')[0];
+            } else if (typeof dataVal === 'number' && dataVal > 1000) {
+              // Excel date serial number
+              const d = new Date(Math.round((dataVal - 25569) * 86400 * 1000));
+              dataStr = d.toISOString().split('T')[0];
             } else if (typeof dataVal === 'string' && dataVal) {
               if (dataVal.includes('/')) {
                 const parts = dataVal.split('/');
@@ -189,30 +215,46 @@ export const parseExcelFile = async (file: File): Promise<PostagemRecord[]> => {
             let horaStr = '';
             if (horaVal instanceof Date) {
               horaStr = horaVal.toTimeString().substring(0, 5);
+            } else if (typeof horaVal === 'number' && horaVal < 1) {
+              // Excel time fraction of day
+              const totalMinutes = Math.round(horaVal * 24 * 60);
+              const h = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+              const m = (totalMinutes % 60).toString().padStart(2, '0');
+              horaStr = `${h}:${m}`;
             } else if (typeof horaVal === 'string') {
               horaStr = horaVal.trim();
             }
 
             const quant = parseInt(String(quantRaw).replace(/[^0-9]/g, '') || '0', 10);
             const layout = parseInt(String(layoutRaw).replace(/[^0-9]/g, '') || '1', 10);
+            const status = statusIdx >= 0 && row[statusIdx] ? String(row[statusIdx]).trim() : 'Conferido';
+            const observacoes = obsIdx >= 0 && row[obsIdx] ? String(row[obsIdx]).trim() : '';
+            const foto_nf = fotoNfIdx >= 0 && row[fotoNfIdx] && row[fotoNfIdx] !== 'NO' ? String(row[fotoNfIdx]).trim() : undefined;
+            const foto_cartaz = fotoCartazIdx >= 0 && row[fotoCartazIdx] && row[fotoCartazIdx] !== 'NO' ? String(row[fotoCartazIdx]).trim() : undefined;
+
+            // Use existing ID if present (e.g. from export), otherwise use deterministic sequence ID
+            const recordId = existingId || `rec_${idCounter++}`;
 
             importedRecords.push({
-              id: `rec_imp_${Date.now()}_${idCounter++}`,
-              ano: year,
+              id: recordId,
+              ano: finalYear,
               cliente,
               campanha,
               grafica,
               layout,
               quantidade: quant,
+              quantidade_raw: String(quant),
               protocolo_os_nf: proto,
               data: dataStr,
               hora: horaStr,
-              status: 'Conferido',
-              observacoes: 'Importado de arquivo Excel',
+              status: (status as any) || 'Conferido',
+              observacoes,
+              foto_nf: foto_nf && foto_nf !== 'SIM' ? foto_nf : undefined,
+              foto_cartaz: foto_cartaz && foto_cartaz !== 'SIM' ? foto_cartaz : undefined,
               conferido_qtd: true,
               conferido_avaria: true,
               conferido_canhoto: true,
-              created_at: new Date().toISOString()
+              created_at: dataStr ? `${dataStr}T00:00:00.000Z` : `${finalYear}-01-01T00:00:00.000Z`
             });
           }
         }

@@ -1,21 +1,31 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { PostagemRecord } from './types';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { PostagemRecord, UserRole } from './types';
 import { dbService } from './services/db';
+import { authService } from './services/authService';
 import { convexService } from './services/convexService';
+import { syncService, SyncStatus } from './services/syncService';
 import { parseExcelFile } from './services/excelService';
 import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
 import { ChecklistFormView } from './components/ChecklistFormView';
+import { DailyReportView } from './components/DailyReportView';
 import { DataTableView } from './components/DataTableView';
 import { GraphicsReportView } from './components/GraphicsReportView';
 import { RecordDetailModal } from './components/RecordDetailModal';
 import { BackupModal } from './components/BackupModal';
+import { LeaderAuthModal } from './components/LeaderAuthModal';
 import { Loader2, Zap } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const [role, setRole] = useState<UserRole>(() => authService.getRole());
+  const [isLeaderAuthOpen, setIsLeaderAuthOpen] = useState<boolean>(false);
   const [records, setRecords] = useState<PostagemRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  
+  // Default tab based on role: Technician goes straight to checklist, Leader to dashboard
+  const [activeTab, setActiveTab] = useState<string>(() => 
+    authService.getRole() === 'lider' ? 'dashboard' : 'checklist'
+  );
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Modals & Selected items
@@ -42,11 +52,32 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     loadRecords();
-    const unsubscribe = dbService.subscribe(() => {
+
+    // Inicializa sincronizador automático em tempo real em segundo plano
+    syncService.init();
+
+    const unsubscribeDb = dbService.subscribe(() => {
       loadRecords();
     });
-    return () => unsubscribe();
+    const unsubscribeAuth = authService.subscribe((newRole) => {
+      setRole(newRole);
+      if (newRole === 'tecnico') {
+        setActiveTab((prev) => (prev === 'daily_report' ? 'daily_report' : 'checklist'));
+      }
+    });
+
+    return () => {
+      unsubscribeDb();
+      unsubscribeAuth();
+    };
   }, [loadRecords]);
+
+  // Ensure technician cannot stay on restricted tab
+  useEffect(() => {
+    if (role === 'tecnico' && activeTab !== 'checklist' && activeTab !== 'daily_report') {
+      setActiveTab('checklist');
+    }
+  }, [role, activeTab]);
 
   // File System Auto-Sync Watcher
   const handleEnableAutoSync = async () => {
@@ -92,9 +123,9 @@ export const App: React.FC = () => {
           console.log('⚡ Modificação detectada na planilha vinculada! Atualizando...');
           const imported = await parseExcelFile(file);
           if (imported.length > 0) {
-            await dbService.bulkAddRecords(imported);
+            const count = await dbService.replaceRecordsFromSpreadsheet(imported);
             convexService.batchSyncRecords(imported).catch(() => {});
-            setAutoSyncToast(`⚡ Planilha atualizada automaticamente! ${imported.length} registros sincronizados.`);
+            setAutoSyncToast(`⚡ Planilha sincronizada automaticamente! ${count} registros ativos (sem duplicidade).`);
             setTimeout(() => setAutoSyncToast(null), 4000);
           }
         }
@@ -122,24 +153,42 @@ export const App: React.FC = () => {
 
   const handleCancelEdit = () => {
     setEditingRecord(null);
-    setActiveTab('table');
+    if (role === 'lider') {
+      setActiveTab('table');
+    } else {
+      setActiveTab('daily_report');
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F4F4F6] text-zinc-900 flex flex-col font-sans">
-      {/* Top Navbar (Minimalist) */}
+      {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={(tab) => {
+          // If technician tries to switch to prohibited tab, open auth modal
+          if (role === 'tecnico' && tab !== 'checklist' && tab !== 'daily_report') {
+            setIsLeaderAuthOpen(true);
+            return;
+          }
           setActiveTab(tab);
           if (tab !== 'checklist') setEditingRecord(null);
         }}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         onOpenChecklist={() => handleOpenChecklist()}
-        onOpenBackup={() => setIsBackupOpen(true)}
+        onOpenBackup={() => {
+          if (role === 'lider') {
+            setIsBackupOpen(true);
+          } else {
+            setIsLeaderAuthOpen(true);
+          }
+        }}
         totalRecordsCount={records.length}
         isAutoSyncActive={isAutoSyncActive}
+        role={role}
+        onOpenLeaderAuth={() => setIsLeaderAuthOpen(true)}
+        onLockToTechnician={() => authService.logoutToTechnician()}
       />
 
       {/* Auto-Sync Toast notification */}
@@ -159,7 +208,8 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <>
-            {activeTab === 'dashboard' && (
+            {/* Common or Role Protected Views */}
+            {activeTab === 'dashboard' && role === 'lider' && (
               <DashboardView
                 records={records}
                 onOpenChecklist={() => handleOpenChecklist()}
@@ -174,10 +224,19 @@ export const App: React.FC = () => {
                 onRecordSaved={handleRecordSaved}
                 editingRecord={editingRecord}
                 onCancelEdit={handleCancelEdit}
+                onViewDailyReport={() => setActiveTab('daily_report')}
               />
             )}
 
-            {activeTab === 'table' && (
+            {activeTab === 'daily_report' && (
+              <DailyReportView
+                records={records}
+                onOpenChecklist={() => handleOpenChecklist()}
+                onSelectRecord={(rec) => setSelectedRecord(rec)}
+              />
+            )}
+
+            {activeTab === 'table' && role === 'lider' && (
               <DataTableView
                 records={records}
                 onOpenChecklist={() => handleOpenChecklist()}
@@ -189,7 +248,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {activeTab === 'reports' && (
+            {activeTab === 'reports' && role === 'lider' && (
               <GraphicsReportView records={records} />
             )}
           </>
@@ -206,6 +265,8 @@ export const App: React.FC = () => {
             <span>Controle de Recebimento de Postagem em Abrigos</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-500">
+            <span>Perfil Ativo: <strong className={role === 'lider' ? 'text-[#FF4F00]' : 'text-[#FECC14]'}>{role === 'lider' ? '👑 Líder' : '🔧 Técnico'}</strong></span>
+            <span>•</span>
             <span>Base Histórica 2017 - 2026</span>
             <span>•</span>
             <span>Nuvem Convex</span>
@@ -220,18 +281,33 @@ export const App: React.FC = () => {
         <RecordDetailModal
           record={selectedRecord}
           onClose={() => setSelectedRecord(null)}
-          onEdit={(rec) => handleOpenChecklist(rec)}
+          onEdit={(rec) => {
+            if (role === 'lider') {
+              handleOpenChecklist(rec);
+            }
+          }}
         />
       )}
 
-      {/* Backup / Excel Sync Modal */}
-      <BackupModal
-        isOpen={isBackupOpen}
-        onClose={() => setIsBackupOpen(false)}
-        records={records}
-        onDataChanged={loadRecords}
-        onEnableAutoSync={handleEnableAutoSync}
-        isAutoSyncActive={isAutoSyncActive}
+      {/* Backup / Excel Sync Modal (Leader Only) */}
+      {role === 'lider' && (
+        <BackupModal
+          isOpen={isBackupOpen}
+          onClose={() => setIsBackupOpen(false)}
+          records={records}
+          onDataChanged={loadRecords}
+          onEnableAutoSync={handleEnableAutoSync}
+          isAutoSyncActive={isAutoSyncActive}
+        />
+      )}
+
+      {/* Leader PIN Unlock Modal */}
+      <LeaderAuthModal
+        isOpen={isLeaderAuthOpen}
+        onClose={() => setIsLeaderAuthOpen(false)}
+        onSuccess={() => {
+          setActiveTab('dashboard');
+        }}
       />
     </div>
   );

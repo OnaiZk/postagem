@@ -167,3 +167,24 @@ export const batchInsert = mutation({
     return insertedCount;
   }
 });
+
+export const deduplicateConvexRecords = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("records").collect();
+    const seenMap = new Map<string, any>();
+    let deletedCount = 0;
+
+    for (const rec of all) {
+      const sig = `${rec.ano}|${(rec.protocolo_os_nf || '').toLowerCase()}|${(rec.cliente || '').toLowerCase()}|${(rec.campanha || '').toLowerCase()}|${rec.layout}|${rec.quantidade}|${rec.data || ''}`;
+      if (seenMap.has(sig)) {
+        await ctx.db.delete(rec._id);
+        deletedCount++;
+      } else {
+        seenMap.set(sig, rec);
+      }
+    }
+
+    return { deletedCount, remainingCount: all.length - deletedCount };
+  }
+});

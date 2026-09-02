@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   Download, 
@@ -12,7 +12,8 @@ import {
   CloudDownload, 
   Loader2, 
   Zap, 
-  Terminal 
+  Terminal,
+  Sparkles 
 } from 'lucide-react';
 import { PostagemRecord } from '../types';
 import { dbService } from '../services/db';
@@ -71,11 +72,11 @@ export const BackupModal: React.FC<BackupModalProps> = ({
       if (!convexData || convexData.length === 0) {
         throw new Error('Nenhum registro encontrado no Convex Cloud.');
       }
-      const count = await dbService.bulkAddRecords(convexData);
+      const count = await dbService.replaceRecordsFromSpreadsheet(convexData);
       onDataChanged();
       setStatusMsg({
         type: 'success',
-        text: `${count.toLocaleString('pt-BR')} registros baixados do Convex Cloud e sincronizados no navegador!`
+        text: `${count.toLocaleString('pt-BR')} registros baixados do Convex Cloud e sincronizados sem duplicidade!`
       });
     } catch (e: any) {
       setStatusMsg({ type: 'error', text: `Erro ao baixar do Convex: ${e.message}` });
@@ -120,10 +121,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
       if (imported.length === 0) {
         throw new Error('Nenhum registro válido encontrado no arquivo.');
       }
-      const count = await dbService.bulkAddRecords(imported);
+      const count = await dbService.replaceRecordsFromSpreadsheet(imported);
       onDataChanged();
       convexService.batchSyncRecords(imported).catch(() => {});
-      setStatusMsg({ type: 'success', text: `${count} registros importados e salvos com sucesso!` });
+      setStatusMsg({
+        type: 'success',
+        text: `Planilha sobreposta e sincronizada com sucesso! ${count.toLocaleString('pt-BR')} registros ativos (sem duplicidade).`
+      });
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: `Erro na importação: ${err.message}` });
     } finally {
@@ -144,15 +148,42 @@ export const BackupModal: React.FC<BackupModalProps> = ({
       if (!Array.isArray(data)) {
         throw new Error('O arquivo JSON deve conter uma lista de registros.');
       }
-      const count = await dbService.bulkAddRecords(data);
+      const count = await dbService.replaceRecordsFromSpreadsheet(data);
       onDataChanged();
       convexService.batchSyncRecords(data).catch(() => {});
-      setStatusMsg({ type: 'success', text: `${count} registros restaurados com sucesso!` });
+      setStatusMsg({
+        type: 'success',
+        text: `Backup restaurado e sobreposto com sucesso! ${count.toLocaleString('pt-BR')} registros ativos.`
+      });
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: `Erro na restauração: ${err.message}` });
     } finally {
       setLoading(false);
       e.target.value = '';
+    }
+  };
+
+  const handleDeduplicate = async () => {
+    setLoading(true);
+    setStatusMsg(null);
+    try {
+      const res = await dbService.deduplicateRecords();
+      onDataChanged();
+      if (res.removedCount > 0) {
+        setStatusMsg({
+          type: 'success',
+          text: `Limpeza concluída! ${res.removedCount.toLocaleString('pt-BR')} registros duplicados foram removidos. Restam ${res.remainingCount.toLocaleString('pt-BR')} registros únicos.`
+        });
+      } else {
+        setStatusMsg({
+          type: 'success',
+          text: `Nenhuma duplicidade encontrada. A base já possui ${res.remainingCount.toLocaleString('pt-BR')} registros únicos.`
+        });
+      }
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: `Erro ao limpar duplicidades: ${err.message}` });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -331,8 +362,16 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             </div>
           </div>
 
-          {/* Danger zone */}
-          <div className="pt-2 border-t border-zinc-200 flex items-center justify-between">
+          {/* Danger / Clean tools zone */}
+          <div className="pt-2 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <button
+              onClick={handleDeduplicate}
+              disabled={loading}
+              className="text-xs text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1.5 underline"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Limpar Registros Duplicados
+            </button>
+
             <button
               onClick={handleResetToDefault}
               disabled={loading}

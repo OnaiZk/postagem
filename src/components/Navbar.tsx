@@ -1,14 +1,20 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   ClipboardCheck, 
+  FileText,
   Table as TableIcon, 
   Building2, 
   Download, 
   Plus, 
-  Cloud
+  Cloud,
+  Lock,
+  Unlock,
+  Wrench,
+  Crown
 } from 'lucide-react';
 import { convexService } from '../services/convexService';
+import { UserRole } from '../types';
 
 interface NavbarProps {
   activeTab: string;
@@ -19,6 +25,9 @@ interface NavbarProps {
   onOpenBackup: () => void;
   totalRecordsCount: number;
   isAutoSyncActive?: boolean;
+  role: UserRole;
+  onOpenLeaderAuth: () => void;
+  onLockToTechnician: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -27,7 +36,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenChecklist,
   onOpenBackup,
   totalRecordsCount,
-  isAutoSyncActive
+  isAutoSyncActive,
+  role,
+  onOpenLeaderAuth,
+  onLockToTechnician
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isConvexOnline, setIsConvexOnline] = useState<boolean>(true);
@@ -74,12 +86,29 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'checklist', label: 'Checklist Diário', icon: ClipboardCheck },
-    { id: 'table', label: 'Planilha Geral', icon: TableIcon, count: totalRecordsCount },
-    { id: 'reports', label: 'Gráficas & Clientes', icon: Building2 },
-  ];
+  // Build nav items dynamically based on user role
+  const isLeader = role === 'lider';
+
+  const navItems = isLeader
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'checklist', label: 'Checklist Diário', icon: ClipboardCheck },
+        { id: 'daily_report', label: 'Relatório do Dia', icon: FileText },
+        { id: 'table', label: 'Planilha Geral', icon: TableIcon, count: totalRecordsCount },
+        { id: 'reports', label: 'Gráficas & Clientes', icon: Building2 },
+      ]
+    : [
+        { id: 'checklist', label: 'Checklist Diário', icon: ClipboardCheck },
+        { id: 'daily_report', label: 'Relatório do Dia', icon: FileText },
+      ];
+
+  const handleLogoClick = () => {
+    if (isLeader) {
+      setActiveTab('dashboard');
+    } else {
+      setActiveTab('checklist');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-[#0c0c0e]/95 backdrop-blur-md text-white border-b border-zinc-800/80 shadow-md select-none">
@@ -93,7 +122,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-4 sm:gap-6 shrink-0">
             {/* Brand / Logo */}
             <div 
-              onClick={() => setActiveTab('dashboard')}
+              onClick={handleLogoClick}
               className="flex items-center gap-2.5 cursor-pointer select-none group shrink-0"
             >
               <div className="w-8 h-8 rounded-lg bg-[#FF4F00] flex items-center justify-center shadow-sm group-hover:brightness-110 transition-all">
@@ -116,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shrink-0">
+            <nav className="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shrink-0">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const Icon = item.icon;
@@ -124,14 +153,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`h-8 px-3.5 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all duration-150 ${
+                    className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all duration-150 ${
                       isActive
                         ? 'bg-zinc-800 text-white shadow-sm border border-zinc-700 font-semibold'
                         : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                     }`}
                   >
                     <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#FF4F00]' : 'text-zinc-400'}`} />
-                    <span>{item.label}</span>
+                    <span className="hidden xs:inline sm:inline">{item.label}</span>
                     {item.count !== undefined && item.count > 0 && (
                       <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full hidden xl:inline ${
                         isActive ? 'bg-zinc-700 text-zinc-200' : 'bg-zinc-800/80 text-zinc-400'
@@ -145,33 +174,68 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
           </div>
 
-          {/* Right Area: Minimalist Action Controls (Same height h-9, matching styling) */}
+          {/* Right Area: Minimalist Action Controls & Role Badge */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Cloud Sync / Backup */}
-            <button
-              onClick={onOpenBackup}
-              title={isAutoSyncActive ? 'Auto-Sync Excel & Convex ativo' : 'Sincronização Convex & Backup'}
-              className="h-9 px-3.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-2 text-xs font-medium active:scale-95"
-            >
-              <Cloud className={`w-3.5 h-3.5 ${isConvexOnline ? 'text-emerald-400' : 'text-zinc-500'}`} />
-              <span className="hidden sm:inline">Sincronizar</span>
-              {isAutoSyncActive && (
-                <span className="flex h-1.5 w-1.5 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FECC14] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FECC14]" />
+            {/* Role Profile Switcher */}
+            {isLeader ? (
+              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+                <span className="px-2.5 py-1 text-[11px] font-black text-[#FF4F00] flex items-center gap-1 rounded-lg bg-[#FF4F00]/10 border border-[#FF4F00]/20">
+                  <Crown className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">Líder (Gestão)</span>
                 </span>
-              )}
-            </button>
+                <button
+                  onClick={onLockToTechnician}
+                  title="Bloquear / Voltar para Modo Técnico"
+                  className="px-2.5 py-1 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span className="hidden sm:inline">Bloquear</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+                <span className="px-2.5 py-1 text-[11px] font-bold text-[#FECC14] flex items-center gap-1 rounded-lg bg-[#FECC14]/10 border border-[#FECC14]/20">
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Técnico</span>
+                </span>
+                <button
+                  onClick={onOpenLeaderAuth}
+                  title="Acesso de Gestão / Líder"
+                  className="px-2.5 py-1 text-[11px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg flex items-center gap-1 transition-colors"
+                >
+                  <Lock className="w-3 h-3 text-[#FF4F00]" />
+                  <span className="hidden sm:inline">Líder</span>
+                </button>
+              </div>
+            )}
+
+            {/* Cloud Sync / Backup (Leader Only) */}
+            {isLeader && (
+              <button
+                onClick={onOpenBackup}
+                title={isAutoSyncActive ? 'Auto-Sync Excel & Convex ativo' : 'Sincronização Convex & Backup'}
+                className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-2 text-xs font-medium active:scale-95"
+              >
+                <Cloud className={`w-3.5 h-3.5 ${isConvexOnline ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                <span className="hidden lg:inline">Sincronizar</span>
+                {isAutoSyncActive && (
+                  <span className="flex h-1.5 w-1.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FECC14] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FECC14]" />
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* PWA Install */}
             {!isInstalled && (
               <button
                 onClick={handleInstallPWA}
                 title="Instalar aplicativo (PWA)"
-                className="h-9 px-3.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-1.5 text-xs font-medium active:scale-95"
+                className="h-9 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-all flex items-center gap-1.5 text-xs font-medium active:scale-95"
               >
                 <Download className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="hidden sm:inline">Instalar</span>
+                <span className="hidden xl:inline">Instalar</span>
               </button>
             )}
 

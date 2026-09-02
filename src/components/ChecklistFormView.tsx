@@ -28,6 +28,7 @@ interface ChecklistFormViewProps {
   onRecordSaved: (record: PostagemRecord) => void;
   editingRecord?: PostagemRecord | null;
   onCancelEdit?: () => void;
+  onViewDailyReport?: () => void;
 }
 
 const COMMON_GRAFICAS = [
@@ -73,7 +74,8 @@ export const ChecklistFormView: React.FC<ChecklistFormViewProps> = ({
   existingRecords,
   onRecordSaved,
   editingRecord,
-  onCancelEdit
+  onCancelEdit,
+  onViewDailyReport
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
   const nowTimeStr = new Date().toTimeString().substring(0, 5);
@@ -265,14 +267,27 @@ export const ChecklistFormView: React.FC<ChecklistFormViewProps> = ({
           </div>
         </div>
 
-        {editingRecord && onCancelEdit && (
-          <button
-            onClick={onCancelEdit}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-xl"
-          >
-            Cancelar Edição
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {onViewDailyReport && (
+            <button
+              type="button"
+              onClick={onViewDailyReport}
+              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#FECC14]" />
+              <span>Ver Relatório de Hoje</span>
+            </button>
+          )}
+
+          {editingRecord && onCancelEdit && (
+            <button
+              onClick={onCancelEdit}
+              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold rounded-xl"
+            >
+              Cancelar Edição
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Success alert */}

@@ -1,3 +1,10 @@
+export type UserRole = 'tecnico' | 'lider';
+
+export interface AuthState {
+  role: UserRole;
+  isLeaderAuthenticated: boolean;
+}
+
 export type RecordStatus = 'Conferido' | 'Pendente' | 'Divergência' | 'Avaria';
 
 export interface PostagemRecord {

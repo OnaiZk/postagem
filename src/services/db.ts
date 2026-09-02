@@ -176,6 +176,11 @@ class DatabaseService {
           if (count === 0 && Array.isArray(initialData) && initialData.length > 0) {
             console.log(`Carregando ${initialData.length} registros históricos no banco local...`);
             await this.bulkInsertRecords(db, initialData as PostagemRecord[]);
+          } else if (count > 6336) {
+            // Se houver mais registros acumulados que o esperado, roda deduplicação para limpar
+            setTimeout(() => {
+              this.deduplicateRecords().catch(() => {});
+            }, 500);
           }
 
           // Check stock items
@@ -303,6 +308,14 @@ class DatabaseService {
       const req = store.add(newRecord);
       req.onsuccess = () => {
         this.notify();
+        // Sincroniza com o servidor central local (Vite/Node)
+        fetch('/api/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newRecord)
+        }).catch(() => {});
+
+        // Sincroniza com o Convex caso ativo
         convexService.saveRecord(newRecord).catch(() => {});
         resolve(newRecord);
       };
@@ -318,6 +331,13 @@ class DatabaseService {
       const req = store.put(record);
       req.onsuccess = () => {
         this.notify();
+        // Sincroniza com o servidor central local
+        fetch('/api/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(record)
+        }).catch(() => {});
+
         convexService.updateRecord(record).catch(() => {});
         resolve(record);
       };
@@ -333,10 +353,215 @@ class DatabaseService {
       const req = store.delete(id);
       req.onsuccess = () => {
         this.notify();
+        // Notifica o servidor central da exclusão
+        fetch(`/api/records/${id}`, { method: 'DELETE' }).catch(() => {});
         convexService.deleteRecord(id).catch(() => {});
         resolve();
       };
       req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Atualiza ou insere um registro recebido de outro dispositivo em tempo real sem re-disparar POST
+   */
+  public async internalUpsertRecord(record: PostagemRecord): Promise<void> {
+    const db = await this.dbPromise;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.put(record);
+      tx.oncomplete = () => {
+        this.notify();
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Exclui um registro localmente após notificação SSE sem re-disparar DELETE
+   */
+  public async internalDeleteRecord(id: string): Promise<void> {
+    const db = await this.dbPromise;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.delete(id);
+      tx.oncomplete = () => {
+        this.notify();
+        resolve();
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Sincroniza e sobrepõe a base de registros a partir de uma nova planilha,
+   * garantindo que registros não fiquem duplicados, mas preservando fotos,
+   * canhotos e observações adicionadas pelos usuários pelo app.
+   */
+  public async replaceRecordsFromSpreadsheet(importedRecords: PostagemRecord[]): Promise<number> {
+    const db = await this.dbPromise;
+
+    // 1. Obter registros existentes para preservar anexos/fotos/edições manuais
+    const existingRecords = await this.getAllRecords();
+    const existingById = new Map<string, PostagemRecord>();
+    const existingBySignature = new Map<string, PostagemRecord>();
+
+    const getSignature = (r: Partial<PostagemRecord>) => {
+      const ano = (r.ano || '').trim();
+      const proto = (r.protocolo_os_nf || '').trim().toLowerCase();
+      const cli = (r.cliente || '').trim().toLowerCase();
+      const camp = (r.campanha || '').trim().toLowerCase();
+      const lay = String(r.layout || 1);
+      const data = (r.data || '').trim();
+      return `${ano}|${proto}|${cli}|${camp}|${lay}|${data}`;
+    };
+
+    for (const ex of existingRecords) {
+      if (ex.id) existingById.set(ex.id, ex);
+      const sig = getSignature(ex);
+      existingBySignature.set(sig, ex);
+    }
+
+    // 2. Mesclar registros importados preservando modificações manuais (fotos, conferências, obs)
+    const finalRecordsMap = new Map<string, PostagemRecord>();
+
+    for (const incoming of importedRecords) {
+      const sig = getSignature(incoming);
+      const matchedExisting = (incoming.id ? existingById.get(incoming.id) : null) || existingBySignature.get(sig);
+
+      const merged: PostagemRecord = {
+        ...incoming,
+        // Se o registro existente tem foto, canhoto ou obs personalizada, preserva
+        foto_nf: incoming.foto_nf || matchedExisting?.foto_nf,
+        foto_cartaz: incoming.foto_cartaz || matchedExisting?.foto_cartaz,
+        conferido_qtd: incoming.conferido_qtd ?? matchedExisting?.conferido_qtd ?? true,
+        conferido_avaria: incoming.conferido_avaria ?? matchedExisting?.conferido_avaria ?? true,
+        conferido_canhoto: incoming.conferido_canhoto ?? matchedExisting?.conferido_canhoto ?? true,
+        status: incoming.status !== 'Conferido' ? incoming.status : (matchedExisting?.status || incoming.status || 'Conferido'),
+        observacoes: incoming.observacoes || matchedExisting?.observacoes || ''
+      };
+
+      finalRecordsMap.set(merged.id, merged);
+    }
+
+    // 3. Preservar registros criados manualmente no app que não estavam na planilha (ex: com fotos de recebimento do dia)
+    for (const ex of existingRecords) {
+      if (ex.id && !finalRecordsMap.has(ex.id)) {
+        const sig = getSignature(ex);
+        const matchedInFinal = Array.from(finalRecordsMap.values()).some((f) => getSignature(f) === sig);
+        if (!matchedInFinal && (ex.foto_nf || ex.foto_cartaz || ex.id.startsWith('rec_17') || ex.id.startsWith('rec_user_'))) {
+          finalRecordsMap.set(ex.id, ex);
+        }
+      }
+    }
+
+    const finalRecordsList = Array.from(finalRecordsMap.values());
+
+    // 4. Salva no IndexedDB substituindo a coleção anterior (evita acúmulo de duplicatas)
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.clear();
+      for (const rec of finalRecordsList) {
+        store.put(rec);
+      }
+
+      tx.oncomplete = () => {
+        this.notify();
+
+        // Envia para a central do Vite para atualizar a base compartilhada
+        fetch('/api/records/sync-spreadsheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: finalRecordsList })
+        }).catch(() => {});
+
+        resolve(finalRecordsList.length);
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Detecta e remove registros duplicados existentes no IndexedDB
+   */
+  public async deduplicateRecords(): Promise<{ removedCount: number; remainingCount: number }> {
+    const db = await this.dbPromise;
+    const all = await this.getAllRecords();
+
+    const seenMap = new Map<string, PostagemRecord>();
+    const duplicateIds: string[] = [];
+
+    const getSignature = (r: PostagemRecord) => {
+      const ano = (r.ano || '').trim();
+      const proto = (r.protocolo_os_nf || '').trim().toLowerCase();
+      const cli = (r.cliente || '').trim().toLowerCase();
+      const camp = (r.campanha || '').trim().toLowerCase();
+      const lay = String(r.layout || 1);
+      const qtd = String(r.quantidade || 0);
+      const data = (r.data || '').trim();
+      return `${ano}|${proto}|${cli}|${camp}|${lay}|${qtd}|${data}`;
+    };
+
+    for (const rec of all) {
+      const sig = getSignature(rec);
+      const existing = seenMap.get(sig);
+      if (existing) {
+        const existingScore = (existing.foto_nf ? 10 : 0) + (existing.foto_cartaz ? 10 : 0) + (existing.observacoes ? 2 : 0) + (existing.id.startsWith('rec_imp_') ? 0 : 5);
+        const currentScore = (rec.foto_nf ? 10 : 0) + (rec.foto_cartaz ? 10 : 0) + (rec.observacoes ? 2 : 0) + (rec.id.startsWith('rec_imp_') ? 0 : 5);
+
+        if (currentScore > existingScore) {
+          duplicateIds.push(existing.id);
+          seenMap.set(sig, rec);
+        } else {
+          duplicateIds.push(rec.id);
+        }
+      } else {
+        seenMap.set(sig, rec);
+      }
+    }
+
+    if (duplicateIds.length === 0) {
+      return { removedCount: 0, remainingCount: all.length };
+    }
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      for (const id of duplicateIds) {
+        store.delete(id);
+      }
+      tx.oncomplete = () => {
+        this.notify();
+        const remaining = all.length - duplicateIds.length;
+        console.log(`🧹 [Deduplicação] Removidos ${duplicateIds.length} registros duplicados. Restantes: ${remaining}`);
+        resolve({ removedCount: duplicateIds.length, remainingCount: remaining });
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Mescla registros recebidos da central mantendo o IndexedDB atualizado
+   */
+  public async bulkMergeFromServer(records: PostagemRecord[]): Promise<number> {
+    const db = await this.dbPromise;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      for (const rec of records) {
+        if (rec.id) {
+          store.put(rec);
+        }
+      }
+      tx.oncomplete = () => {
+        this.notify();
+        resolve(records.length);
+      };
+      tx.onerror = () => reject(tx.error);
     });
   }
 
@@ -355,6 +580,11 @@ class DatabaseService {
       }
       tx.oncomplete = () => {
         this.notify();
+        fetch('/api/records/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records })
+        }).catch(() => {});
         resolve(count);
       };
       tx.onerror = () => reject(tx.error);
