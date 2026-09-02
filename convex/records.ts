@@ -188,3 +188,14 @@ export const deduplicateConvexRecords = mutation({
     return { deletedCount, remainingCount: all.length - deletedCount };
   }
 });
+
+export const clearAllRecords = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("records").collect();
+    for (const rec of all) {
+      await ctx.db.delete(rec._id);
+    }
+    return all.length;
+  }
+});

@@ -13,7 +13,8 @@ import {
   Loader2, 
   Zap, 
   Terminal,
-  Sparkles 
+  Sparkles,
+  Trash2 
 } from 'lucide-react';
 import { PostagemRecord } from '../types';
 import { dbService } from '../services/db';
@@ -182,6 +183,29 @@ export const BackupModal: React.FC<BackupModalProps> = ({
       }
     } catch (err: any) {
       setStatusMsg({ type: 'error', text: `Erro ao limpar duplicidades: ${err.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    const confirmation = window.confirm(
+      '⚠️ ATENÇÃO: Deseja realmente APAGAR TODOS os registros de postagem da base de dados?\n\nEsta ação deixará a tabela vazia (0 registros) para você importar uma nova planilha limpa do zero.'
+    );
+    if (!confirmation) return;
+
+    setLoading(true);
+    setStatusMsg(null);
+    try {
+      await dbService.clearAllRecords();
+      await convexService.clearAllRecords().catch(() => {});
+      onDataChanged();
+      setStatusMsg({
+        type: 'success',
+        text: 'Base apagada com sucesso! A tabela está vazia (0 registros). Agora você pode importar sua nova planilha limpa.'
+      });
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: `Erro ao apagar registros: ${err.message}` });
     } finally {
       setLoading(false);
     }
@@ -363,22 +387,40 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           </div>
 
           {/* Danger / Clean tools zone */}
-          <div className="pt-2 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <button
-              onClick={handleDeduplicate}
-              disabled={loading}
-              className="text-xs text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1.5 underline"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Limpar Registros Duplicados
-            </button>
+          <div className="pt-3 border-t border-zinc-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500">Ferramentas de Limpeza & Manutenção</span>
+            </div>
 
-            <button
-              onClick={handleResetToDefault}
-              disabled={loading}
-              className="text-xs text-amber-700 hover:text-amber-900 font-bold flex items-center gap-1.5 underline"
-            >
-              <RotateCcw className="w-3.5 h-3.5" /> Re-sincronizar banco com planilha original
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-0.5">
+              <button
+                onClick={handleClearAll}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 p-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-900 rounded-xl text-xs font-black transition-colors"
+                title="Apaga todos os registros para importar uma nova planilha limpa do zero"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Apagar Tudo (Zerar Base)</span>
+              </button>
+
+              <button
+                onClick={handleDeduplicate}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 p-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 hover:text-blue-900 rounded-xl text-xs font-bold transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>Limpar Duplicidades</span>
+              </button>
+
+              <button
+                onClick={handleResetToDefault}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 p-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 hover:text-amber-900 rounded-xl text-xs font-bold transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                <span>Restaurar Original</span>
+              </button>
+            </div>
           </div>
         </div>
 

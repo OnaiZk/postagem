@@ -78,6 +78,17 @@ class ConvexService {
     }
   }
 
+  public async clearAllRecords(): Promise<boolean> {
+    try {
+      if (!this.client) return false;
+      await this.client.mutation("records:clearAllRecords" as any, {});
+      return true;
+    } catch (e) {
+      console.warn("Erro ao limpar registros no Convex:", e);
+      return false;
+    }
+  }
+
   public async fetchAllRecords(): Promise<PostagemRecord[] | null> {
     try {
       if (!this.client) return null;

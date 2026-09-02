@@ -173,7 +173,8 @@ class DatabaseService {
         try {
           // Check records
           const count = await this.countStore(db, STORE_NAME);
-          if (count === 0 && Array.isArray(initialData) && initialData.length > 0) {
+          const isCleared = typeof window !== 'undefined' && localStorage.getItem('eletromidia_db_cleared') === 'true';
+          if (count === 0 && !isCleared && Array.isArray(initialData) && initialData.length > 0) {
             console.log(`Carregando ${initialData.length} registros históricos no banco local...`);
             await this.bulkInsertRecords(db, initialData as PostagemRecord[]);
           } else if (count > 6336) {
@@ -460,6 +461,10 @@ class DatabaseService {
 
     const finalRecordsList = Array.from(finalRecordsMap.values());
 
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('eletromidia_db_cleared');
+    }
+
     // 4. Salva no IndexedDB substituindo a coleção anterior (evita acúmulo de duplicatas)
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -593,6 +598,9 @@ class DatabaseService {
 
   public async resetToInitialData(): Promise<number> {
     const db = await this.dbPromise;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('eletromidia_db_cleared');
+    }
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
@@ -602,7 +610,33 @@ class DatabaseService {
       }
       tx.oncomplete = () => {
         this.notify();
+        fetch('/api/records/sync-spreadsheet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: initialData })
+        }).catch(() => {});
         resolve(initialData.length);
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  /**
+   * Apaga todos os registros de postagem/protocolos do sistema
+   */
+  public async clearAllRecords(): Promise<void> {
+    const db = await this.dbPromise;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eletromidia_db_cleared', 'true');
+    }
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      store.clear();
+      tx.oncomplete = () => {
+        this.notify();
+        fetch('/api/records/clear', { method: 'POST' }).catch(() => {});
+        resolve();
       };
       tx.onerror = () => reject(tx.error);
     });

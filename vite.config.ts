@@ -297,6 +297,20 @@ function serverSyncPlugin(): Plugin {
           return;
         }
 
+        // 5.2 POST /api/records/clear (Clear all records)
+        if (pathname === '/api/records/clear' && req.method === 'POST') {
+          try {
+            saveUserRecords([]);
+            broadcastSSE('bulk_saved', { count: 0 });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true, count: 0 }));
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message }));
+          }
+          return;
+        }
+
         // 6. DELETE /api/records/:id
         if (pathname.startsWith('/api/records/') && req.method === 'DELETE') {
           const id = pathname.replace('/api/records/', '');
